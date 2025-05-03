@@ -1,0 +1,17 @@
+# Node dependencies
+node_modules/
+
+# Python virtual environments
+venv/
+__pycache__/
+
+# macOS files
+.DS_Store
+
+# IDE/editor settings
+.vscode/
+.idea/
+
+# Cache and logs
+*.log
+.cache/
