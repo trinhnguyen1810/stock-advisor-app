@@ -36,15 +36,18 @@ class SavedAnalysis(db.Model):
     recommendation = Column(String(50))
     notes = Column(Text)
     factors = Column(JSON)
-    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relationship with User
     user = relationship("User", back_populates="saved_analyses")
     
+    # Add a unique constraint to prevent duplicate entries for the same user and symbol
+    __table_args__ = (db.UniqueConstraint('user_id', 'symbol', name='uix_user_symbol'),)
+    
     def to_dict(self):
         """Convert saved analysis object to dictionary"""
         return {
-            "id": str(self.id),
+            "id": self.id,
             "symbol": self.symbol,
             "name": self.name,
             "recommendation": self.recommendation,

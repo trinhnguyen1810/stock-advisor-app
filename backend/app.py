@@ -11,6 +11,8 @@ from database import init_db, db
 from routes.auth_routes import auth_bp
 from routes.stock_routes import stock_bp
 from routes.analysis_routes import analysis_bp
+from config import JWT_SECRET_KEY, JWT_ACCESS_TOKEN_EXPIRES, JWT_REFRESH_TOKEN_EXPIRES
+
 
 # Create Flask app
 app = Flask(__name__)
@@ -18,14 +20,15 @@ app = Flask(__name__)
 # Enable CORS with credentials support
 CORS(app, supports_credentials=True)
 
+# Import configuration
+
 # Configure app
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'dev-secret-key')
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
+app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = JWT_ACCESS_TOKEN_EXPIRES
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = JWT_REFRESH_TOKEN_EXPIRES
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
 app.config['JWT_HEADER_NAME'] = 'Authorization'
 app.config['JWT_HEADER_TYPE'] = 'Bearer'
-
 # Initialize database
 init_db(app)
 

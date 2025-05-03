@@ -365,25 +365,48 @@ def save_analysis():
                 'message': 'User not found'
             }), 404
         
-        # Create new saved analysis
-        new_analysis = SavedAnalysis(
+        # Check if analysis already exists for this user and stock
+        existing_analysis = SavedAnalysis.query.filter_by(
             user_id=user.id,
-            symbol=data.get('symbol'),
-            name=data.get('name', data.get('symbol')),
-            recommendation=data.get('recommendation', 'HOLD'),
-            notes=data.get('notes', ''),
-            factors=data.get('factors', [])
-        )
+            symbol=data.get('symbol')
+        ).first()
         
-        # Save to database
-        db.session.add(new_analysis)
-        db.session.commit()
-        
-        return jsonify({
-            'message': 'Analysis saved successfully',
-            'analysis': new_analysis.to_dict()
-        }), 201
-    
+        if existing_analysis:
+            # Update existing analysis
+            existing_analysis.name = data.get('name', existing_analysis.name)
+            existing_analysis.recommendation = data.get('recommendation', existing_analysis.recommendation)
+            existing_analysis.notes = data.get('notes', existing_analysis.notes)
+            
+            if data.get('factors'):
+                existing_analysis.factors = data.get('factors')
+                
+            # The timestamp will update automatically due to the onupdate parameter
+            
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'Analysis updated successfully',
+                'analysis': existing_analysis.to_dict()
+            }), 200
+        else:
+            # Create new analysis
+            new_analysis = SavedAnalysis(
+                user_id=user.id,
+                symbol=data.get('symbol'),
+                name=data.get('name', data.get('symbol')),
+                recommendation=data.get('recommendation', 'HOLD'),
+                notes=data.get('notes', ''),
+                factors=data.get('factors', [])
+            )
+            
+            db.session.add(new_analysis)
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'Analysis saved successfully',
+                'analysis': new_analysis.to_dict()
+            }), 201
+            
     except Exception as e:
         db.session.rollback()
         print(f"Save analysis error: {str(e)}")
