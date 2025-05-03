@@ -5,5 +5,19 @@
         "email": "trinhnguyen@uni.minerva.edu",
         "password": "scrypt:32768:8:1$vcxJBqjhTOF3si2x$56d551de04d2989b84f01aa4409248249b623103b3e1fa4abf0de1d7fffdfab0b91dd2087c8d8f3f214b1c9a61c1790fe5352b46fefefea3d5a8af8dcd140db7",
         "saved_analyses": []
+    },
+    "abcd@gmail.com": {
+        "id": "2",
+        "name": "Trinh Nguyen",
+        "email": "abcd@gmail.com",
+        "password": "scrypt:32768:8:1$GiIlGevZRio6dBB5$2d6b03dde11ebaf8aa92399987569240157f3a79894f05c117354dc67743d8a1b06c09600bff3215ec18cfc461aadf7bd38800c0fa8c746f469003e75ba381d3",
+        "saved_analyses": []
+    },
+    "trinhnguyen8010@gmail.com": {
+        "id": "3",
+        "name": "Trinh",
+        "email": "trinhnguyen8010@gmail.com",
+        "password": "scrypt:32768:8:1$vDSzpmPVBdTAbnyp$c819ce78de7ce0f254343b52877fb82bcbd9d9902e177c0f8dc993a610cc59b8cda7921941164584250fee11d3a5d5ecb484a5a72a33c7764dd531f318f43ce7",
+        "saved_analyses": []
     }
 }

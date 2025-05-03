@@ -46,13 +46,18 @@ const Login = () => {
       // Call login API
       const response = await authAPI.login(formData);
       
-      // Store token and user data
-      const { token, user } = response.data;
-      login(token, user);
+      console.log('Login response:', response.data);
+      
+      // The backend now returns access_token
+      const { access_token, user } = response.data;
+      
+      // Store token and update auth context
+      login(access_token, user);
       
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
+      console.error('Login error:', err);
       setError(
         err.response?.data?.message || 
         'Login failed. Please check your credentials.'
@@ -126,6 +131,11 @@ const Login = () => {
           </Button>
           
           <Grid container>
+            <Grid item xs>
+              <Typography variant="body2" color="text.secondary">
+                Test account: test@example.com / password123
+              </Typography>
+            </Grid>
             <Grid item>
               <Link component={RouterLink} to="/register" variant="body2">
                 {"Don't have an account? Sign Up"}

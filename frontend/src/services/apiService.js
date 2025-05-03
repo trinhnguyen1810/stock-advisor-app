@@ -1,3 +1,4 @@
+// frontend/src/services/apiService.js
 import axios from 'axios';
 
 // Create axios instance
@@ -13,7 +14,10 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
+      // Make sure the token is properly formatted
       config.headers.Authorization = `Bearer ${token}`;
+      // For debugging
+      console.log('Sending request with token:', token);
     }
     return config;
   },
@@ -28,10 +32,17 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Log detailed error information for debugging
+    console.error('API Error:', error.response ? error.response.status : 'No response', 
+                 error.response ? error.response.data : 'No data');
+    
     if (error.response && error.response.status === 401) {
-      // Redirect to login if unauthorized
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Only redirect to login if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        console.log('Unauthorized, redirecting to login');
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -39,7 +50,17 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  login: (credentials) => api.post('/auth/login', credentials),
+  login: (credentials) => {
+    return api.post('/auth/login', credentials)
+      .then(response => {
+        // Store token in localStorage
+        if (response.data.access_token) {
+          localStorage.setItem('token', response.data.access_token);
+          console.log('Token stored:', response.data.access_token);
+        }
+        return response;
+      });
+  },
   register: (userData) => api.post('/auth/register', userData),
   getCurrentUser: () => api.get('/auth/me')
 };

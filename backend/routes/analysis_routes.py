@@ -3,33 +3,13 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 import yfinance as yf
 import pandas as pd
 import numpy as np
-import json
-import os
 from datetime import datetime, timedelta
+from database import db
+from models.models import User, SavedAnalysis
 from services.news_service import get_stock_news
 
 # Create blueprint
 analysis_bp = Blueprint('analysis', __name__)
-
-# File to store saved analyses
-USERS_FILE = 'users.json'
-
-# Helper functions
-def get_users():
-    """Load users from JSON file"""
-    if not os.path.exists(USERS_FILE):
-        return {}
-    
-    with open(USERS_FILE, 'r') as f:
-        try:
-            return json.load(f)
-        except:
-            return {}
-
-def save_users(users):
-    """Save users to JSON file"""
-    with open(USERS_FILE, 'w') as f:
-        json.dump(users, f, indent=4)
 
 def get_causal_factors(symbol):
     """
@@ -368,94 +348,109 @@ def sector_analysis(sector):
 @jwt_required()
 def save_analysis():
     """Save an analysis for a user"""
-    current_user = get_jwt_identity()
-    data = request.get_json()
-    
-    if not data or not data.get('symbol'):
+    try:
+        current_user_email = get_jwt_identity()
+        data = request.get_json()
+        
+        # Validate input
+        if not data or not data.get('symbol'):
+            return jsonify({
+                'message': 'Missing required fields'
+            }), 400
+        
+        # Get user
+        user = User.query.filter_by(email=current_user_email).first()
+        if not user:
+            return jsonify({
+                'message': 'User not found'
+            }), 404
+        
+        # Create new saved analysis
+        new_analysis = SavedAnalysis(
+            user_id=user.id,
+            symbol=data.get('symbol'),
+            name=data.get('name', data.get('symbol')),
+            recommendation=data.get('recommendation', 'HOLD'),
+            notes=data.get('notes', ''),
+            factors=data.get('factors', [])
+        )
+        
+        # Save to database
+        db.session.add(new_analysis)
+        db.session.commit()
+        
         return jsonify({
-            'message': 'Missing required fields'
-        }), 400
+            'message': 'Analysis saved successfully',
+            'analysis': new_analysis.to_dict()
+        }), 201
     
-    users = get_users()
-    
-    if current_user not in users:
+    except Exception as e:
+        db.session.rollback()
+        print(f"Save analysis error: {str(e)}")
         return jsonify({
-            'message': 'User not found'
-        }), 404
-    
-    # Add timestamp to analysis
-    analysis = {
-        'id': str(datetime.now().timestamp()),
-        'timestamp': datetime.now().isoformat(),
-        'symbol': data.get('symbol'),
-        'name': data.get('name', data.get('symbol')),
-        'recommendation': data.get('recommendation', 'HOLD'),
-        'notes': data.get('notes', ''),
-        'factors': data.get('factors', [])
-    }
-    
-    # Add analysis to user's saved analyses
-    if 'saved_analyses' not in users[current_user]:
-        users[current_user]['saved_analyses'] = []
-    
-    users[current_user]['saved_analyses'].append(analysis)
-    
-    # Save users data
-    save_users(users)
-    
-    return jsonify({
-        'message': 'Analysis saved successfully',
-        'analysis': analysis
-    }), 201
+            'message': f'Error saving analysis: {str(e)}'
+        }), 500
 
 @analysis_bp.route('/saved', methods=['GET'])
 @jwt_required()
 def get_saved_analyses():
     """Get all saved analyses for a user"""
-    current_user = get_jwt_identity()
-    users = get_users()
+    try:
+        current_user_email = get_jwt_identity()
+        
+        # Get user
+        user = User.query.filter_by(email=current_user_email).first()
+        if not user:
+            return jsonify({
+                'message': 'User not found'
+            }), 404
+        
+        # Get saved analyses
+        analyses = SavedAnalysis.query.filter_by(user_id=user.id).order_by(SavedAnalysis.timestamp.desc()).all()
+        
+        # Convert to dict
+        analyses_dict = [analysis.to_dict() for analysis in analyses]
+        
+        return jsonify(analyses_dict), 200
     
-    if current_user not in users:
+    except Exception as e:
+        print(f"Get saved analyses error: {str(e)}")
         return jsonify({
-            'message': 'User not found'
-        }), 404
-    
-    # Get saved analyses
-    analyses = users[current_user].get('saved_analyses', [])
-    
-    # Sort by timestamp (newest first)
-    analyses.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
-    
-    return jsonify(analyses), 200
+            'message': f'Error fetching saved analyses: {str(e)}'
+        }), 500
 
 @analysis_bp.route('/saved/<analysis_id>', methods=['DELETE'])
 @jwt_required()
 def delete_saved_analysis(analysis_id):
     """Delete a saved analysis"""
-    current_user = get_jwt_identity()
-    users = get_users()
-    
-    if current_user not in users:
-        return jsonify({
-            'message': 'User not found'
-        }), 404
-    
-    # Get saved analyses
-    analyses = users[current_user].get('saved_analyses', [])
-    
-    # Find analysis by ID
-    for i, analysis in enumerate(analyses):
-        if analysis.get('id') == analysis_id:
-            # Remove analysis
-            analyses.pop(i)
-            
-            # Save users data
-            save_users(users)
-            
+    try:
+        current_user_email = get_jwt_identity()
+        
+        # Get user
+        user = User.query.filter_by(email=current_user_email).first()
+        if not user:
             return jsonify({
-                'message': 'Analysis deleted successfully'
-            }), 200
+                'message': 'User not found'
+            }), 404
+        
+        # Find analysis
+        analysis = SavedAnalysis.query.filter_by(id=analysis_id, user_id=user.id).first()
+        if not analysis:
+            return jsonify({
+                'message': 'Analysis not found'
+            }), 404
+        
+        # Delete analysis
+        db.session.delete(analysis)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Analysis deleted successfully'
+        }), 200
     
-    return jsonify({
-        'message': 'Analysis not found'
-    }), 404
+    except Exception as e:
+        db.session.rollback()
+        print(f"Delete analysis error: {str(e)}")
+        return jsonify({
+            'message': f'Error deleting analysis: {str(e)}'
+        }), 500

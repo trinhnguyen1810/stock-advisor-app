@@ -89,19 +89,24 @@ const Register = () => {
         password: formData.password
       });
       
+      console.log('Register response:', registerResponse.data);
+      
       // After successful registration, log in the user
       const loginResponse = await authAPI.login({
         email: formData.email,
         password: formData.password
       });
       
-      // Store token and user data
-      const { token, user } = loginResponse.data;
-      login(token, user);
+      console.log('Login response:', loginResponse.data);
+      
+      // Store token and user data - using access_token from response
+      const { access_token, user } = loginResponse.data;
+      login(access_token, user);
       
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
+      console.error('Registration error:', err);
       setError(
         err.response?.data?.message || 
         'Registration failed. Please try again later.'

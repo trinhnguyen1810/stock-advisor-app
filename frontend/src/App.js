@@ -20,6 +20,9 @@ import LoadingScreen from './components/common/LoadingScreen';
 // Auth context
 import { AuthContext } from './context/AuthContext';
 
+// API service
+import { authAPI } from './services/apiService';
+
 // Create theme
 const theme = createTheme({
   palette: {
@@ -88,23 +91,31 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Check if user is logged in (token exists)
-    const token = localStorage.getItem('token');
-    
-    if (token) {
-      // In a real app, you'd verify the token with the backend
-      // For simplicity, we'll just check if it exists
-      setIsAuthenticated(true);
+    const checkAuth = async () => {
+      setIsLoading(true);
       
-      // Mock user data
-      setUser({
-        id: '1',
-        name: 'Demo User',
-        email: 'demo@example.com'
-      });
-    }
+      try {
+        // Check if token exists
+        const token = localStorage.getItem('token');
+        
+        if (token) {
+          // Verify token with backend
+          const response = await authAPI.getCurrentUser();
+          setUser(response.data);
+          setIsAuthenticated(true);
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        // Clear invalid token
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    setIsLoading(false);
+    checkAuth();
   }, []);
   
   // Login function
