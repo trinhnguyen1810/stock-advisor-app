@@ -15,3 +15,7 @@ __pycache__/
 # Cache and logs
 *.log
 .cache/
+
+# Ignore heavy folders
+node_modules/
+backend/venv/
