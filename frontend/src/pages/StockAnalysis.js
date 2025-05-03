@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StockNotes from '../components/analysis/StockNotes';
 import { useParams } from 'react-router-dom';
 import {
   Container,

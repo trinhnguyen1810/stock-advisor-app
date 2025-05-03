@@ -477,3 +477,80 @@ def delete_saved_analysis(analysis_id):
         return jsonify({
             'message': f'Error deleting analysis: {str(e)}'
         }), 500
+
+# Add these routes to your analysis_routes.py file
+
+@analysis_bp.route('/notes/stock/<symbol>', methods=['GET'])
+@jwt_required()
+def get_stock_notes(symbol):
+    """Get all notes for a specific stock"""
+    try:
+        current_user_email = get_jwt_identity()
+        
+        # Get user
+        user = User.query.filter_by(email=current_user_email).first()
+        if not user:
+            return jsonify({
+                'message': 'User not found'
+            }), 404
+        
+        # Get saved analyses for this symbol
+        analyses = SavedAnalysis.query.filter_by(
+            user_id=user.id, 
+            symbol=symbol.upper()
+        ).order_by(SavedAnalysis.timestamp.desc()).all()
+        
+        # Convert to dict
+        analyses_dict = [analysis.to_dict() for analysis in analyses]
+        
+        return jsonify(analyses_dict), 200
+    
+    except Exception as e:
+        print(f"Get stock notes error: {str(e)}")
+        return jsonify({
+            'message': f'Error fetching stock notes: {str(e)}'
+        }), 500
+
+@analysis_bp.route('/notes/<analysis_id>', methods=['PUT'])
+@jwt_required()
+def update_note(analysis_id):
+    """Update an existing note"""
+    try:
+        current_user_email = get_jwt_identity()
+        data = request.get_json()
+        
+        # Validate input
+        if not data or 'notes' not in data:
+            return jsonify({
+                'message': 'Missing notes field'
+            }), 400
+        
+        # Get user
+        user = User.query.filter_by(email=current_user_email).first()
+        if not user:
+            return jsonify({
+                'message': 'User not found'
+            }), 404
+        
+        # Find analysis
+        analysis = SavedAnalysis.query.filter_by(id=analysis_id, user_id=user.id).first()
+        if not analysis:
+            return jsonify({
+                'message': 'Analysis not found'
+            }), 404
+        
+        # Update notes
+        analysis.notes = data['notes']
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Note updated successfully',
+            'analysis': analysis.to_dict()
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"Update note error: {str(e)}")
+        return jsonify({
+            'message': f'Error updating note: {str(e)}'
+        }), 500

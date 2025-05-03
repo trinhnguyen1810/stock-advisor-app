@@ -80,7 +80,10 @@ export const analysisAPI = {
   getSectorAnalysis: (sector) => api.get(`/analysis/sector/${sector}`),
   saveAnalysis: (data) => api.post('/analysis/save', data),
   getSavedAnalyses: () => api.get('/analysis/saved'),
-  deleteSavedAnalysis: (id) => api.delete(`/analysis/saved/${id}`)
+  deleteSavedAnalysis: (id) => api.delete(`/analysis/saved/${id}`),
+  getStockNotes: (symbol) => api.get(`/analysis/notes/stock/${symbol}`),
+  updateNote: (id, data) => api.put(`/analysis/notes/${id}`, data),
+
 };
 
 // News API
