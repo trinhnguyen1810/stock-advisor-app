@@ -1,0 +1,9 @@
+{
+    "trinhnguyen@uni.minerva.edu": {
+        "id": "1",
+        "name": "Trinh",
+        "email": "trinhnguyen@uni.minerva.edu",
+        "password": "scrypt:32768:8:1$vcxJBqjhTOF3si2x$56d551de04d2989b84f01aa4409248249b623103b3e1fa4abf0de1d7fffdfab0b91dd2087c8d8f3f214b1c9a61c1790fe5352b46fefefea3d5a8af8dcd140db7",
+        "saved_analyses": []
+    }
+}

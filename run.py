@@ -30,7 +30,7 @@ sys.path.append(os.path.abspath('backend'))
 from backend.app import app
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5001))
+    port = int(os.environ.get('PORT', 5002))
     print(f"Starting Stock Advisor API on port {port}...")
     print(f"Access the API at http://localhost:{port}")
     app.run(host='0.0.0.0', port=port, debug=True)
