@@ -24,6 +24,7 @@ class User(db.Model):
             "name": self.name,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
+# In backend/models/models.py
 
 class SavedAnalysis(db.Model):
     """Model for saved stock analyses"""
@@ -31,18 +32,18 @@ class SavedAnalysis(db.Model):
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    symbol = Column(String(20), nullable=False)
+    symbol = Column(String(20), nullable=False, index=True)  # Added index=True here
     name = Column(String(255))
     recommendation = Column(String(50))
     notes = Column(Text)
     factors = Column(JSON)
-    timestamp = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), index=True)
     
     # Relationship with User
     user = relationship("User", back_populates="saved_analyses")
     
-    # Add a unique constraint to prevent duplicate entries for the same user and symbol
-    __table_args__ = (db.UniqueConstraint('user_id', 'symbol', name='uix_user_symbol'),)
+    # Remove the unique constraint to allow multiple notes per stock
+    # __table_args__ = (db.UniqueConstraint('user_id', 'symbol', name='uix_user_symbol'),)
     
     def to_dict(self):
         """Convert saved analysis object to dictionary"""

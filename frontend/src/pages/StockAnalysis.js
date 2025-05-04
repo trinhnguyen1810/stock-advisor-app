@@ -675,25 +675,8 @@ const StockAnalysis = () => {
           Personal Notes
         </Typography>
         
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          variant="outlined"
-          placeholder="Add your personal notes about this stock..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-        
-        <Button 
-          variant="contained" 
-          color="primary"
-          onClick={handleSaveAnalysis}
-          disabled={!recommendationData}
-        >
-          Save Analysis with Notes
-        </Button>
+        {/* Replace the TextField with the StockNotes component */}
+        <StockNotes symbol={symbol} stockName={stockData?.name || symbol} />
       </Paper>
       
       {/* Snackbar for notifications */}

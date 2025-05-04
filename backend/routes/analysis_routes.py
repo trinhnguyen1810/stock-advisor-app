@@ -511,6 +511,7 @@ def get_stock_notes(symbol):
             'message': f'Error fetching stock notes: {str(e)}'
         }), 500
 
+
 @analysis_bp.route('/notes/<analysis_id>', methods=['PUT'])
 @jwt_required()
 def update_note(analysis_id):

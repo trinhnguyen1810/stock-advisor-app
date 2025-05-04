@@ -119,8 +119,25 @@ const SavedAnalyses = () => {
   useEffect(() => {
     const fetchSavedAnalyses = async () => {
       try {
+        // Get all saved analyses
         const response = await analysisAPI.getSavedAnalyses();
-        setAnalyses(response.data);
+        
+        // Group by symbol and keep only the most recent note for each symbol
+        const latestBySymbol = {};
+        response.data.forEach(analysis => {
+          const symbol = analysis.symbol;
+          
+          // If we haven't seen this symbol yet, or this note is more recent than what we have
+          if (!latestBySymbol[symbol] || 
+              new Date(analysis.timestamp) > new Date(latestBySymbol[symbol].timestamp)) {
+            latestBySymbol[symbol] = analysis;
+          }
+        });
+        
+        // Convert the object back to an array
+        const latestAnalyses = Object.values(latestBySymbol);
+        
+        setAnalyses(latestAnalyses);
       } catch (err) {
         console.error('Error fetching saved analyses:', err);
         setError('Failed to load saved analyses');
@@ -131,6 +148,7 @@ const SavedAnalyses = () => {
 
     fetchSavedAnalyses();
   }, []);
+
 
   const handleDelete = async (id) => {
     try {

@@ -1,4 +1,3 @@
-// StockNotes.js - A component to manage notes for a specific stock
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -25,7 +24,7 @@ import {
   Delete as DeleteIcon,
   Add as AddIcon
 } from '@mui/icons-material';
-import {analysisAPI } from '../../services/apiService';
+import { analysisAPI } from '../../services/apiService';
 
 const StockNotes = ({ symbol, stockName }) => {
   const [notes, setNotes] = useState([]);
@@ -40,13 +39,14 @@ const StockNotes = ({ symbol, stockName }) => {
     severity: 'success'
   });
 
-  // Fetch existing notes for this stock
+  // Fetch existing notes for this stock - THIS IS THE KEY PART FOR SHOWING ALL NOTES
   useEffect(() => {
     const fetchNotes = async () => {
       setLoading(true);
       try {
-        // Use the new API endpoint to fetch notes by stock symbol
+        // Use the API endpoint to fetch notes by stock symbol
         const response = await analysisAPI.getStockNotes(symbol);
+        console.log("Fetched notes:", response.data); // Debugging
         setNotes(response.data);
       } catch (error) {
         console.error('Error fetching notes:', error);
@@ -79,15 +79,8 @@ const StockNotes = ({ symbol, stockName }) => {
     try {
       setLoading(true);
       
-      const noteData = {
-        symbol,
-        name: stockName,
-        recommendation: 'HOLD', // Default value, could be dynamically set
-        notes: currentNote
-      };
-
       if (editingNoteId) {
-        // Use the new update note endpoint
+        // Update existing note
         const response = await analysisAPI.updateNote(editingNoteId, { notes: currentNote });
         
         // Replace the edited note in the local state
@@ -99,6 +92,13 @@ const StockNotes = ({ symbol, stockName }) => {
         setEditingNoteId(null);
       } else {
         // Create a new note
+        const noteData = {
+          symbol,
+          name: stockName,
+          recommendation: 'HOLD', // Default value, could be dynamically set
+          notes: currentNote
+        };
+        
         const response = await analysisAPI.saveAnalysis(noteData);
         
         // Add the new note to the local state
@@ -134,7 +134,7 @@ const StockNotes = ({ symbol, stockName }) => {
       setLoading(true);
       await analysisAPI.deleteSavedAnalysis(noteToDelete.id);
       
-      // Remove from local state
+      // Remove only the specific note from local state
       setNotes(notes.filter(note => note.id !== noteToDelete.id));
       
       showSnackbar('Note deleted successfully');
@@ -192,7 +192,10 @@ const StockNotes = ({ symbol, stockName }) => {
         {editingNoteId ? 'Update Note' : 'Save Note'}
       </Button>
 
-      {notes.length > 0 && (
+      {/* Log notes length for debugging */}
+      {console.log("Notes length:", notes.length)}
+      
+      {notes && notes.length > 0 ? (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h6" gutterBottom>
             Your Notes History
@@ -231,6 +234,12 @@ const StockNotes = ({ symbol, stockName }) => {
               </Paper>
             ))}
           </List>
+        </Box>
+      ) : (
+        <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            You haven't added any notes for this stock yet.
+          </Typography>
         </Box>
       )}
 
